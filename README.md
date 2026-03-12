@@ -11,22 +11,22 @@ Se evalúan y comparan tres enfoques principales de extracción de característi
 3. **Combinado:** Fusión de características FC y ALFF.
 
 ## Estuctura del proyecto
-\`\`\`text
+```text
 depresion_mdd/
 ├── data/                   
 ├── results/
 │   ├── figures/            # Gráficas generadas (Matrices de Confusión, ROC)
-│   ├── metrics/            # Archivos .json con métricas (Sensibilidad, Especificidad)
-│   └── models/             # (Ignorado en Git) Modelos entrenados (.pkl)
+│   ├── metrics/            # Archivos con métricas (Sensibilidad, Especificidad)
+│   └── models/             # Modelos entrenados (.pkl)
 ├── src/                    # Código fuente del proyecto
+│   ├── config.py           # Variables globales y rutas del sistema
 │   ├── data_loader.py      # Carga de datos del dataset REST-meta-MDD
 │   ├── feature_extraction.py # Extracción de FC y ALFF
 │   ├── preprocessing.py    # Estandarización, split de datos y reducción PCA
 │   └── utils.py            # Herramientas base (métricas, guardado, gráficas)
-├── config.py               # Variables globales y rutas del sistema
 ├── .gitignore              # Archivos excluidos de control de versiones
 └── README.md               # Documentación principal
-\`\`\`
+```
 
 ## Estado actual
 - [x] Extracción de características FC y ALFF implementada.
