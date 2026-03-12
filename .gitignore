@@ -1,0 +1,16 @@
+# Datos pesados
+data/
+
+# Modelos y resultados
+results/models/
+
+# Python y vs-code
+__pychache__/
+*.py[cod]
+*$py.class
+.vscode/
+
+# Entornos
+venv/
+env/
+.env
