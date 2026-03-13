@@ -40,11 +40,6 @@ except ImportError:
     print("[WARN] No se encontro config.py.")
     config = None
 
-
-# ──────────────────────────────────────────────────
-# 1. Carga de datos
-# ──────────────────────────────────────────────────
-
 def load_processed_data(processed_dir=None, use_combat=False):
     """
     Carga los archivos .npy generados por feature_extraction.py
@@ -108,11 +103,6 @@ def load_processed_data(processed_dir=None, use_combat=False):
 def make_splits(labels, test_size=None, val_size=None, random_state=None):
     """
     Genera los indices para dividir en train/val/test.
-
-    Devuelve solo indices (no los datos) para que el mismo split
-    se aplique a los 3 experimentos (FC, ALFF, combinado).
-    Asi la comparacion entre experimentos es justa: los mismos
-    sujetos estan en train, val y test en los 3 casos.
 
     Split por defecto: 70% train, 15% val, 15% test
     Estratificado: misma proporcion MDD/HC en cada set.
@@ -178,9 +168,6 @@ def preprocess_experiment(X, labels, splits, experiment_name,
                           apply_anova=False, k_features=None):
     """
     Aplica StandardScaler y opcionalmente IncrementalPCA a un experimento.
-
-    Importante: fit solo en train, transform en val y test.
-    Esto evita data leakage (que info de val/test se filtre al train).
 
     Usa IncrementalPCA y procesamiento por lotes (batch_size=400) para
     no saturar la RAM con las matrices de 1.6M features.
@@ -403,8 +390,6 @@ def preprocess_all(processed_dir=None, use_combat=False):
         'y_test':  experiments['fc']['y_test'],
     }
 
-    # Experimento 3b: Combined con ANOVA
-    # FC_anova (100) + ALFF_scaled (49) concatenados, con scaler final
     print(f"\n[INFO] Construyendo experimento: combined_anova{sufijo}")
     X_train_comb_anova = np.concatenate(
         (experiments['fc_anova']['X_train'], experiments['alff']['X_train']), axis=1
@@ -450,23 +435,16 @@ if __name__ == '__main__':
     Ejecutar para preprocesar los 3 experimentos:
         python src/preprocessing.py          # sin ComBat
         python src/preprocessing.py combat   # con ComBat
-
-    Cache automatico: si los archivos de salida ya existen en disco,
-    se cargan directamente sin reprocesar. Esto evita recalcular FC
-    (que puede tardar horas) si ya se habia corrido antes.
-    Para forzar el recalculo, borra los archivos X_train_*.npy primero.
     """
     import sys
 
-    # Argumento opcional desde linea de comandos
-    # Uso: python src/preprocessing.py combat
     use_combat = len(sys.argv) > 1 and sys.argv[1].lower() == 'combat'
     sufijo     = '_combat' if use_combat else ''
 
     if use_combat:
-        print("[INFO] Modo: CON armonizacion ComBat")
+        print("[INFO] Con armonizacion ComBat")
     else:
-        print("[INFO] Modo: SIN armonizacion ComBat (datos originales)")
+        print("[INFO] Sin armonizacion ComBat (datos originales)")
 
     if config is not None:
         save_dir = config.PROCESSED_DIR
@@ -484,7 +462,6 @@ if __name__ == '__main__':
 
     if cache_existe:
         print(f"\n[INFO] Archivos ya procesados encontrados en disco.")
-        print(f"       Cargando desde cache (modo: {'combat' if use_combat else 'sin combat'})...")
 
         exp_nombres = ['fc', 'alff', 'combined', 'fc_anova', 'combined_anova']
         experiments = {}
@@ -511,12 +488,7 @@ if __name__ == '__main__':
             print(f"    Val:   {exp['X_val'].shape}")
             print(f"    Test:  {exp['X_test'].shape}")
 
-        print("\n[INFO] Cache cargado. No se recalculo nada.")
-        print("       Para forzar el recalculo, borra los archivos X_train_*.npy de data/processed/")
-
     else:
-        # ── Procesar desde cero ──
-        print("[INFO] No se encontro cache. Calculando desde cero...")
         try:
             experiments, splits = preprocess_all(use_combat=use_combat)
 
