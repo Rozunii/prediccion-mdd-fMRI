@@ -19,7 +19,7 @@ from sklearn.metrics import (
 )
 
 try:
-    import config
+    from src import config
 except ImportError:
     print('[WARN] No se encontro config.py')
     config = None
@@ -43,7 +43,7 @@ def ensure_dir(directory_path):
     """
     Verifica si un directorio existe sino crea uno.
     """
-    if not os.path.exits(directory_path):
+    if not os.path.exists(directory_path):
         os.makedirs(directory_path)
         print(f'Carpeta creada: {directory_path}')
     return directory_path
@@ -57,10 +57,10 @@ def save_model(model, filename, save_dir=None):
     
     ensure_dir(save_dir)
 
-    if not filename.endswith('.plk'):
-        filename += '.plk'
+    if not filename.endswith('.pkl'):
+        filename += '.pkl'
 
-    file_path = os.path.join(save_dir, save_dir)
+    file_path = os.path.join(save_dir, filename)
     joblib.dump(model, file_path)
 
     print(f'Modelo guardado en: {file_path}')
@@ -175,7 +175,7 @@ def plot_confusion_matrix(y_true, y_pred, model_name='Modelo', experiment_name='
     plt.tight_layout()
 
     # Guardar
-    filename = f'cm_{model_name.replace(' ', '')}_{experiment_name}.png'
+    filename = f"cm_{model_name.replace(' ', '')}_{experiment_name}.png"
     file_path = os.path.join(save_dir, filename)
     plt.savefig(file_path, dpi=300)
     plt.close()

@@ -320,13 +320,25 @@ def preprocess_all(processed_dir=None):
     )
 
     # Experimento 3: FC + ALFF combinado → necesita PCA
-    experiments['combined'] = preprocess_experiment(
-        X=data['combined'],
-        labels=data['labels'],
-        splits=splits,
-        experiment_name='combined',
-        apply_pca=True
-    )
+    # 1. Unimos las columnas
+    X_train_comb = np.concatenate((experiments['fc']['X_train'], experiments['alff']['X_train']), axis=1)
+    X_val_comb = np.concatenate((experiments['fc']['X_val'], experiments['alff']['X_val']), axis=1)
+    X_test_comb = np.concatenate((experiments['fc']['X_test'], experiments['alff']['X_test']), axis=1)
+    
+    # 2. Volvemos a escalar todo para que FC no aplaste a ALFF
+    final_scaler = StandardScaler()
+    X_train_comb_scaled = final_scaler.fit_transform(X_train_comb)
+    X_val_comb_scaled = final_scaler.transform(X_val_comb)
+    X_test_comb_scaled = final_scaler.transform(X_test_comb)
+
+    experiments['combined'] = {
+        'X_train': X_train_comb_scaled,
+        'X_val': X_val_comb_scaled,
+        'X_test': X_test_comb_scaled,
+        'y_train': experiments['fc']['y_train'],
+        'y_val': experiments['fc']['y_val'],
+        'y_test': experiments['fc']['y_test']
+    }
 
     # 4. Resumen final
     for name, exp in experiments.items():
