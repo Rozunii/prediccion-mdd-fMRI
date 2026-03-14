@@ -42,6 +42,7 @@ TRAIN_SIZE      = 0.70      # 70% para entrenamiento
 RANDOM_STATE    = 42        # Semilla para reproducibilidad
 APPLY_PCA       = True      # Reduccion de dimensionalidad antes del MLp
 PCA_COMPONENTS  = 100       # Numero de componentes a conservar con PCA
+ANOVA_K_FEATURES = 2000
 
 # Verificacion
 if __name__ == "__main__":

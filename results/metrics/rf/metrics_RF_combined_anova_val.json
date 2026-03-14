@@ -1,0 +1,16 @@
+{
+    "model": "RF",
+    "experiment": "combined_anova_val",
+    "accuracy": 0.6191860465116279,
+    "sensitivity": 0.6467391304347826,
+    "specificity": 0.5875,
+    "precision": 0.6432432432432432,
+    "f1_score": 0.6449864498644986,
+    "auc_roc": 0.6628057065217392,
+    "confusion_matrix": {
+        "TP": 119,
+        "FP": 66,
+        "TN": 94,
+        "FN": 65
+    }
+}

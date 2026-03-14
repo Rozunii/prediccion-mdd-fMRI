@@ -1,16 +1,16 @@
 {
     "model": "SVM",
     "experiment": "fc_anova",
-    "accuracy": 0.5406976744186046,
-    "sensitivity": 0.7010869565217391,
-    "specificity": 0.35625,
-    "precision": 0.5560344827586207,
-    "f1_score": 0.6201923076923077,
-    "auc_roc": 0.5716881793478261,
+    "accuracy": 0.5174418604651163,
+    "sensitivity": 0.6304347826086957,
+    "specificity": 0.3875,
+    "precision": 0.5420560747663551,
+    "f1_score": 0.5829145728643216,
+    "auc_roc": 0.557133152173913,
     "confusion_matrix": {
-        "TP": 129,
-        "FP": 103,
-        "TN": 57,
-        "FN": 55
+        "TP": 116,
+        "FP": 98,
+        "TN": 62,
+        "FN": 68
     }
 }
