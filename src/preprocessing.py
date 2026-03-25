@@ -165,7 +165,8 @@ def make_splits(labels, test_size=None, val_size=None, random_state=None):
 
 def preprocess_experiment(X, labels, splits, experiment_name,
                           apply_pca=True, n_components=None, save_dir=None,
-                          apply_anova=False, k_features=None):
+                          apply_anova=False, k_features=None,
+                          apply_mrmr=False):
     """
     Aplica StandardScaler y opcionalmente IncrementalPCA a un experimento.
 
@@ -278,6 +279,69 @@ def preprocess_experiment(X, labels, splits, experiment_name,
     else:
         selector = None
 
+    if apply_mrmr:
+        from mrmr import mrmr_classif
+        import pandas as pd
+
+        k = min(k_features, X.shape[1])
+        n_prefilter = min(5000, X.shape[1])
+        print(f"  Calculando mRMR (prefiltrado ANOVA {n_prefilter} → mRMR k={k})...")
+
+        # Paso 1: prefiltrado ANOVA incremental para reducir a 5000 features
+        n_features = X.shape[1]
+        n0 = 0; n1 = 0
+        sum0    = np.zeros(n_features, dtype=np.float64)
+        sum1    = np.zeros(n_features, dtype=np.float64)
+        sum_sq0 = np.zeros(n_features, dtype=np.float64)
+        sum_sq1 = np.zeros(n_features, dtype=np.float64)
+
+        for batch_idx in get_batches(idx_train):
+            batch_scaled = scaler.transform(X[batch_idx]).astype(np.float64)
+            batch_labels = labels[batch_idx]
+            mask0 = batch_labels == 0
+            mask1 = batch_labels == 1
+            if mask0.any():
+                n0      += mask0.sum()
+                sum0    += batch_scaled[mask0].sum(axis=0)
+                sum_sq0 += (batch_scaled[mask0] ** 2).sum(axis=0)
+            if mask1.any():
+                n1      += mask1.sum()
+                sum1    += batch_scaled[mask1].sum(axis=0)
+                sum_sq1 += (batch_scaled[mask1] ** 2).sum(axis=0)
+
+        mean0 = sum0 / n0
+        mean1 = sum1 / n1
+        var0  = np.maximum(sum_sq0 / n0 - mean0 ** 2, 0.0)
+        var1  = np.maximum(sum_sq1 / n1 - mean1 ** 2, 0.0)
+        grand_mean  = (sum0 + sum1) / (n0 + n1)
+        between_var = (n0 * (mean0 - grand_mean) ** 2 +
+                       n1 * (mean1 - grand_mean) ** 2)
+        within_var  = np.maximum(n0 * var0 + n1 * var1, 1e-10)
+        f_scores    = between_var / within_var
+        prefilter_indices = np.argsort(f_scores)[-n_prefilter:]
+        del sum0, sum1, sum_sq0, sum_sq1, f_scores, var0, var1
+
+        print(f"  Prefiltrado ANOVA completado: {n_prefilter} features seleccionadas.")
+
+        # Paso 2: materializar submatriz train prefiltrada (cabe en RAM)
+        X_train_pre = np.vstack([
+            scaler.transform(X[batch_idx])[:, prefilter_indices]
+            for batch_idx in get_batches(idx_train)
+        ])
+
+        # Paso 3: mRMR sobre la submatriz prefiltrada
+        print(f"  Ejecutando mRMR...")
+        df_X = pd.DataFrame(X_train_pre.astype(np.float32))
+        sr_y = pd.Series(labels[idx_train])
+        selected_cols = mrmr_classif(X=df_X, y=sr_y, K=k, show_progress=True)
+        mrmr_indices = prefilter_indices[np.array(selected_cols)]
+        selector = {'indices': mrmr_indices, 'k': k}
+
+        del X_train_pre, df_X, sr_y
+        print(f"  mRMR completado: {k} features seleccionadas de {n_features:,}")
+    elif not apply_anova:
+        pass  # selector ya es None
+
     # PASO C: Transformar train, val y test en lotes
     def transform_dataset(indices, dataset_name):
         """Aplica scaler (y pca o anova si corresponde) por lotes."""
@@ -287,7 +351,7 @@ def preprocess_experiment(X, labels, splits, experiment_name,
             batch_scaled = scaler.transform(X[batch_idx])
             if apply_pca:
                 batch_out = pca.transform(batch_scaled)
-            elif apply_anova:
+            elif apply_anova or apply_mrmr:
                 batch_out = batch_scaled[:, selector['indices']]
             else:
                 batch_out = batch_scaled
@@ -311,6 +375,8 @@ def preprocess_experiment(X, labels, splits, experiment_name,
         print(f"  PCA: {max_components} componentes ({var_explained:.1f}% varianza explicada)")
     if apply_anova:
         print(f"  ANOVA: {k} features seleccionadas de {X.shape[1]:,}")
+    if apply_mrmr:
+        print(f"  mRMR: {k} features seleccionadas de {X.shape[1]:,}")
 
     return {
         'X_train': X_train_out,
@@ -390,6 +456,17 @@ def preprocess_all(processed_dir=None, use_combat=False):
         apply_anova=True
     )
 
+    # Experimento 1c: Solo FC con mRMR (seleccion con minima redundancia)
+    experiments['fc_mrmr'] = preprocess_experiment(
+        X=data['fc'],
+        labels=data['labels'],
+        splits=splits,
+        experiment_name=f'fc_mrmr{sufijo}',
+        apply_pca=False,
+        apply_mrmr=True,
+        k_features=config.MRMR_K_FEATURES
+    )
+
     print(f"\n[INFO] Construyendo experimento: combined{sufijo}")
     X_train_comb = np.concatenate(
         (experiments['fc']['X_train'], experiments['alff']['X_train']), axis=1
@@ -454,6 +531,36 @@ def preprocess_all(processed_dir=None, use_combat=False):
         'y_test':  experiments['fc']['y_test'],
     }
 
+    print(f"\n[INFO] Construyendo experimento: combined_mrmr{sufijo}")
+    X_train_comb_mrmr = np.concatenate(
+        (experiments['fc_mrmr']['X_train'], experiments['alff']['X_train']), axis=1
+    )
+    X_val_comb_mrmr = np.concatenate(
+        (experiments['fc_mrmr']['X_val'], experiments['alff']['X_val']), axis=1
+    )
+    X_test_comb_mrmr = np.concatenate(
+        (experiments['fc_mrmr']['X_test'], experiments['alff']['X_test']), axis=1
+    )
+
+    final_scaler_mrmr = StandardScaler()
+    X_train_comb_mrmr = final_scaler_mrmr.fit_transform(X_train_comb_mrmr)
+    X_val_comb_mrmr   = final_scaler_mrmr.transform(X_val_comb_mrmr)
+    X_test_comb_mrmr  = final_scaler_mrmr.transform(X_test_comb_mrmr)
+
+    joblib.dump(
+        {'scaler': final_scaler_mrmr, 'pca': None, 'selector': None},
+        os.path.join(save_dir, f'preprocessor_combined_mrmr{sufijo}.pkl')
+    )
+
+    experiments['combined_mrmr'] = {
+        'X_train': X_train_comb_mrmr,
+        'X_val':   X_val_comb_mrmr,
+        'X_test':  X_test_comb_mrmr,
+        'y_train': experiments['fc']['y_train'],
+        'y_val':   experiments['fc']['y_val'],
+        'y_test':  experiments['fc']['y_test'],
+    }
+
     # Resumen final
     print(f"\n[INFO] Resumen de experimentos ({('CON' if use_combat else 'SIN')} ComBat):")
     for name, exp in experiments.items():
@@ -487,7 +594,7 @@ if __name__ == '__main__':
 
     # Verificacion por experimento individual
     # combined y combined_anova dependen de fc, alff y fc_anova respectivamente
-    exp_nombres = ['fc', 'alff', 'fc_anova', 'combined', 'combined_anova']
+    exp_nombres = ['fc', 'alff', 'fc_anova', 'fc_mrmr', 'combined', 'combined_anova', 'combined_mrmr']
 
     def cache_completo(exp_name):
         """Retorna True si los 6 archivos del experimento existen en disco."""
@@ -578,6 +685,14 @@ if __name__ == '__main__':
                 )
                 guardar_experimento(f'fc_anova{sufijo}', experiments['fc_anova'])
 
+            # fc_mrmr
+            if 'fc_mrmr' not in experiments:
+                experiments['fc_mrmr'] = preprocess_experiment(
+                    X=data['fc'], labels=data['labels'], splits=splits,
+                    experiment_name=f'fc_mrmr{sufijo}', apply_pca=False, apply_mrmr=True
+                )
+                guardar_experimento(f'fc_mrmr{sufijo}', experiments['fc_mrmr'])
+
             # combined — depende de fc y alff
             if 'combined' not in experiments:
                 print(f"\n[INFO] Construyendo experimento: combined{sufijo}")
@@ -644,6 +759,39 @@ if __name__ == '__main__':
                     'y_test':  experiments['fc']['y_test'],
                 }
                 guardar_experimento(f'combined_anova{sufijo}', experiments['combined_anova'])
+
+            # combined_mrmr — depende de fc_mrmr y alff
+            if 'combined_mrmr' not in experiments:
+                print(f"\n[INFO] Construyendo experimento: combined_mrmr{sufijo}")
+                X_train_comb_mrmr = np.concatenate(
+                    (experiments['fc_mrmr']['X_train'], experiments['alff']['X_train']), axis=1
+                )
+                X_val_comb_mrmr = np.concatenate(
+                    (experiments['fc_mrmr']['X_val'], experiments['alff']['X_val']), axis=1
+                )
+                X_test_comb_mrmr = np.concatenate(
+                    (experiments['fc_mrmr']['X_test'], experiments['alff']['X_test']), axis=1
+                )
+                final_scaler_mrmr = StandardScaler()
+                X_train_comb_mrmr = final_scaler_mrmr.fit_transform(X_train_comb_mrmr)
+                X_val_comb_mrmr   = final_scaler_mrmr.transform(X_val_comb_mrmr)
+                X_test_comb_mrmr  = final_scaler_mrmr.transform(X_test_comb_mrmr)
+
+                save_models = config.MODELS_DIR if config else 'results/models'
+                joblib.dump(
+                    {'scaler': final_scaler_mrmr, 'pca': None, 'selector': None},
+                    os.path.join(save_models, f'preprocessor_combined_mrmr{sufijo}.pkl')
+                )
+
+                experiments['combined_mrmr'] = {
+                    'X_train': X_train_comb_mrmr,
+                    'X_val':   X_val_comb_mrmr,
+                    'X_test':  X_test_comb_mrmr,
+                    'y_train': experiments['fc']['y_train'],
+                    'y_val':   experiments['fc']['y_val'],
+                    'y_test':  experiments['fc']['y_test'],
+                }
+                guardar_experimento(f'combined_mrmr{sufijo}', experiments['combined_mrmr'])
 
             print("[INFO] Todos los datos procesados guardados con exito.")
             print(f"       Sufijo: '{sufijo}' (vacio = sin ComBat)")

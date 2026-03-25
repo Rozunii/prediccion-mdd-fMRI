@@ -13,7 +13,10 @@ try:
 except ImportError:
     print('[WARN] No se encontro config.py o utils.py')
     config = None
- 
+
+FIGURES_DIR = os.path.join(config.FIGURES_DIR, 'svm')
+METRICS_DIR = os.path.join(config.METRICS_DIR, 'svm')
+
 def entrenar_evaluar_svm(feature):
     print(f'Entrenando: {feature}')
  
@@ -52,17 +55,19 @@ def entrenar_evaluar_svm(feature):
     y_pred_val = mejor_modelo.predict(X_val)
     y_prob_val = mejor_modelo.predict_proba(X_val)[:, 1]
     print(f'Resultados en validacion:')
-    utils.evaluate_model(y_val, y_pred_val, y_prob_val, model_name="SVM", experiment_name=f'{feature}_val')
- 
+    utils.evaluate_model(y_val, y_pred_val, y_prob_val, model_name="SVM", experiment_name=f'{feature}_val', save_dir=METRICS_DIR)
+    utils.plot_confusion_matrix(y_val, y_pred_val, model_name="SVM", experiment_name=f'{feature}_val', save_dir=FIGURES_DIR)
+    utils.plot_roc_curve(y_val, y_prob_val, model_name="SVM", experiment_name=f'{feature}_val', save_dir=FIGURES_DIR)
+
     # Predicciones
     y_pred = mejor_modelo.predict(X_test)
     y_prob = mejor_modelo.predict_proba(X_test)[:, 1]
- 
+
     # Evaluar y graficar
     print(f'Graficas y metricas')
-    utils.evaluate_model(y_test, y_pred, y_prob, model_name="SVM", experiment_name=feature)
-    utils.plot_confusion_matrix(y_test, y_pred, model_name="SVM", experiment_name=feature)
-    utils.plot_roc_curve(y_test, y_prob, model_name="SVM", experiment_name=feature)
+    utils.evaluate_model(y_test, y_pred, y_prob, model_name="SVM", experiment_name=feature, save_dir=METRICS_DIR)
+    utils.plot_confusion_matrix(y_test, y_pred, model_name="SVM", experiment_name=feature, save_dir=FIGURES_DIR)
+    utils.plot_roc_curve(y_test, y_prob, model_name="SVM", experiment_name=feature, save_dir=FIGURES_DIR)
  
     # Guardar modelo
     model_path = os.path.join(config.MODELS_DIR, f'svm_{feature}.pkl')
@@ -73,11 +78,16 @@ if __name__ == '__main__':
     use_combat = len(sys.argv) > 1 and sys.argv[1].lower() == 'combat'
     sufijo = '_combat' if use_combat else ''
  
-    experimentos = ['fc', 'alff', 'combined', 'fc_anova', 'combined_anova']
+    experimentos = ['fc', 'alff', 'combined', 'fc_anova', 'combined_anova', 'fc_mrmr', 'combined_mrmr']
  
     for exp in experimentos:
+        feature = f'{exp}{sufijo}'
+        metrics_file = os.path.join(METRICS_DIR, f'metrics_SVM_{feature}.json')
+        if os.path.exists(metrics_file):
+            print(f'[SKIP] Ya existe: {metrics_file}')
+            continue
         try:
-            entrenar_evaluar_svm(f'{exp}{sufijo}')
+            entrenar_evaluar_svm(feature)
         except FileNotFoundError as e:
             print(f'No se encontraron los datos para {exp}: {e}')
 

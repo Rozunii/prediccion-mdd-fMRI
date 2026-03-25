@@ -40,9 +40,10 @@ TEST_SIZE       = 0.15      # 15% reservado para prueba final (no tocar hasta el
 VAL_SIZE        = 0.15      # 15% para validacion durante desarrollo
 TRAIN_SIZE      = 0.70      # 70% para entrenamiento
 RANDOM_STATE    = 42        # Semilla para reproducibilidad
-APPLY_PCA       = True      # Reduccion de dimensionalidad antes del MLp
-PCA_COMPONENTS  = 100       # Numero de componentes a conservar con PCA
-ANOVA_K_FEATURES = 2000
+APPLY_PCA       = True      # Reduccion de dimensionalidad antes del ML
+PCA_COMPONENTS  = 300       # Aumentado de 100: 100 componentes solo explicaban 42% de varianza
+ANOVA_K_FEATURES = 500      # Reducido de 2000: con 1605 muestras, 2000 features causaba overfitting
+MRMR_K_FEATURES = 500       # 500 features seleccionadas por minima redundancia maxima relevancia
 
 # Verificacion
 if __name__ == "__main__":
