@@ -16,6 +16,7 @@ except ImportError:
 
 FIGURES_DIR = os.path.join(config.FIGURES_DIR, 'rf')
 METRICS_DIR = os.path.join(config.METRICS_DIR, 'rf')
+MODELS_DIR  = os.path.join(config.MODELS_DIR, 'rf')
 
 def entrenar_evaluar_rf(feature):
     print(f'Entrenando: {feature}')
@@ -37,7 +38,7 @@ def entrenar_evaluar_rf(feature):
     }
 
     # Hacer Grid (n_jobs=2 evita WinError 1450 por agotamiento de recursos en Windows)
-    grid_search = GridSearchCV(rf, param_grid, cv=5, scoring='accuracy', n_jobs=4, verbose=1)
+    grid_search = GridSearchCV(rf, param_grid, cv=5, scoring='roc_auc', n_jobs=4, verbose=1)
 
     # Entrenamiento
     print('Buscando hiperparametros')
@@ -65,7 +66,7 @@ def entrenar_evaluar_rf(feature):
     utils.plot_roc_curve(y_test, y_prob, model_name="RF", experiment_name=feature, save_dir=FIGURES_DIR)
 
     # Guardar modelo
-    model_path = os.path.join(config.MODELS_DIR, f'rf_{feature}.pkl')
+    model_path = os.path.join(MODELS_DIR, f'rf_{feature}.pkl')
     joblib.dump(mejor_modelo, model_path)
     print(f'Modelo guardado: {model_path}')
 

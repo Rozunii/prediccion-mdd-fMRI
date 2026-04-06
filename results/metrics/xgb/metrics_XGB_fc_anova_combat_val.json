@@ -1,0 +1,16 @@
+{
+    "model": "XGB",
+    "experiment": "fc_anova_combat_val",
+    "accuracy": 0.625,
+    "sensitivity": 0.6358695652173914,
+    "specificity": 0.6125,
+    "precision": 0.6536312849162011,
+    "f1_score": 0.6446280991735537,
+    "auc_roc": 0.6714334239130435,
+    "confusion_matrix": {
+        "TP": 117,
+        "FP": 62,
+        "TN": 98,
+        "FN": 67
+    }
+}

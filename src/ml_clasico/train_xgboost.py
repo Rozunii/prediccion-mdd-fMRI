@@ -16,6 +16,7 @@ except ImportError:
 
 FIGURES_DIR = os.path.join(config.FIGURES_DIR, 'xgb')
 METRICS_DIR = os.path.join(config.METRICS_DIR, 'xgb')
+MODELS_DIR  = os.path.join(config.MODELS_DIR, 'xgb')
 
 def entrenar_evaluar_xgb(feature):
     print(f'Entrenando: {feature}')
@@ -75,7 +76,7 @@ def entrenar_evaluar_xgb(feature):
     utils.plot_roc_curve(y_test, y_prob, model_name="XGB", experiment_name=feature, save_dir=FIGURES_DIR)
 
     # Guardar modelo
-    model_path = os.path.join(config.MODELS_DIR, f'xgb_{feature}.pkl')
+    model_path = os.path.join(MODELS_DIR, f'xgb_{feature}.pkl')
     joblib.dump(mejor_modelo, model_path)
     print(f'Modelo guardado: {model_path}')
 

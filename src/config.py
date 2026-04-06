@@ -41,7 +41,8 @@ VAL_SIZE        = 0.15      # 15% para validacion durante desarrollo
 TRAIN_SIZE      = 0.70      # 70% para entrenamiento
 RANDOM_STATE    = 42        # Semilla para reproducibilidad
 APPLY_PCA       = True      # Reduccion de dimensionalidad antes del ML
-PCA_COMPONENTS  = 300       # Aumentado de 100: 100 componentes solo explicaban 42% de varianza
+PCA_COMPONENTS  = 200       # sklearn IncrementalPCA usa float64 internamente: (300+200)×1.6M×8 = 6.35GB (igual que config original)
+PCA_BATCH_SIZE  = 300       # Minimo = PCA_COMPONENTS: batch mas pequeño libera RAM a costa de mas iteraciones SVD
 ANOVA_K_FEATURES = 500      # Reducido de 2000: con 1605 muestras, 2000 features causaba overfitting
 MRMR_K_FEATURES = 500       # 500 features seleccionadas por minima redundancia maxima relevancia
 

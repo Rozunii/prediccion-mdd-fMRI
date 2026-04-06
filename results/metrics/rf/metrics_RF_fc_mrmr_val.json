@@ -1,0 +1,16 @@
+{
+    "model": "RF",
+    "experiment": "fc_mrmr_val",
+    "accuracy": 0.6191860465116279,
+    "sensitivity": 0.717391304347826,
+    "specificity": 0.50625,
+    "precision": 0.6255924170616114,
+    "f1_score": 0.6683544303797468,
+    "auc_roc": 0.6670006793478261,
+    "confusion_matrix": {
+        "TP": 132,
+        "FP": 79,
+        "TN": 81,
+        "FN": 52
+    }
+}

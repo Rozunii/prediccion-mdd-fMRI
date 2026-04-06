@@ -1,0 +1,16 @@
+{
+    "model": "RF",
+    "experiment": "combined_combat_val",
+    "accuracy": 0.6453488372093024,
+    "sensitivity": 0.8315217391304348,
+    "specificity": 0.43125,
+    "precision": 0.6270491803278688,
+    "f1_score": 0.7149532710280374,
+    "auc_roc": 0.6909646739130435,
+    "confusion_matrix": {
+        "TP": 153,
+        "FP": 91,
+        "TN": 69,
+        "FN": 31
+    }
+}

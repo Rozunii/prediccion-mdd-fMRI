@@ -1,0 +1,8 @@
+{
+  "model": "XGB",
+  "split": "test",
+  "rmse": 6.3175,
+  "mae": 4.9493,
+  "r2": 0.0931,
+  "pearson_r": 0.3613
+}

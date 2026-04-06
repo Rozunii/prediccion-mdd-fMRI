@@ -1,0 +1,16 @@
+{
+    "model": "SVM",
+    "experiment": "combined_anova",
+    "accuracy": 0.5203488372093024,
+    "sensitivity": 0.6521739130434783,
+    "specificity": 0.36875,
+    "precision": 0.5429864253393665,
+    "f1_score": 0.5925925925925926,
+    "auc_roc": 0.5618716032608696,
+    "confusion_matrix": {
+        "TP": 120,
+        "FP": 101,
+        "TN": 59,
+        "FN": 64
+    }
+}

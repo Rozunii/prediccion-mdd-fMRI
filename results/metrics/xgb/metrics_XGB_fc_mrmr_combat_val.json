@@ -1,0 +1,16 @@
+{
+    "model": "XGB",
+    "experiment": "fc_mrmr_combat_val",
+    "accuracy": 0.627906976744186,
+    "sensitivity": 0.6684782608695652,
+    "specificity": 0.58125,
+    "precision": 0.6473684210526316,
+    "f1_score": 0.6577540106951871,
+    "auc_roc": 0.6874660326086957,
+    "confusion_matrix": {
+        "TP": 123,
+        "FP": 67,
+        "TN": 93,
+        "FN": 61
+    }
+}

@@ -1,0 +1,16 @@
+{
+  "cluster_1": {
+    "n": 99,
+    "phq_total_mean": 19.949,
+    "happiness_mean": 1.532,
+    "happiness_std": 0.777,
+    "age_mean": 27.9
+  },
+  "cluster_2": {
+    "n": 81,
+    "phq_total_mean": 9.543,
+    "happiness_mean": 2.312,
+    "happiness_std": 0.646,
+    "age_mean": 28.6
+  }
+}

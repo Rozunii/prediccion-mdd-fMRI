@@ -223,8 +223,10 @@ def preprocess_experiment(X, labels, splits, experiment_name,
         max_components = min(n_components, len(idx_train), X.shape[1])
         pca = IncrementalPCA(n_components=max_components)
 
+        # PCA_BATCH_SIZE controla RAM: (batch+components)×1.6M×8 bytes debe caber en RAM libre
+        pca_batch = config.PCA_BATCH_SIZE if hasattr(config, 'PCA_BATCH_SIZE') else max_components
         print("  Ajustando IncrementalPCA por lotes...")
-        for batch_idx in get_batches(idx_train, min_size=max_components):
+        for batch_idx in get_batches(idx_train, batch_size=pca_batch, min_size=max_components):
             batch_scaled = scaler.transform(X[batch_idx])
             pca.partial_fit(batch_scaled)
     else:
@@ -597,36 +599,45 @@ if __name__ == '__main__':
     exp_nombres = ['fc', 'alff', 'fc_anova', 'fc_mrmr', 'combined', 'combined_anova', 'combined_mrmr']
 
     def cache_completo(exp_name):
-        """Retorna True si los 6 archivos del experimento existen en disco."""
+        """Retorna True si los 6 archivos del experimento existen en disco.
+
+        exp_name ya incluye el sufijo _combat si aplica.
+        """
         archivos = [
-            os.path.join(save_dir, f'X_train_{exp_name}{sufijo}.npy'),
-            os.path.join(save_dir, f'X_val_{exp_name}{sufijo}.npy'),
-            os.path.join(save_dir, f'X_test_{exp_name}{sufijo}.npy'),
-            os.path.join(save_dir, f'y_train_{exp_name}{sufijo}.npy'),
-            os.path.join(save_dir, f'y_val_{exp_name}{sufijo}.npy'),
-            os.path.join(save_dir, f'y_test_{exp_name}{sufijo}.npy'),
+            os.path.join(save_dir, f'X_train_{exp_name}.npy'),
+            os.path.join(save_dir, f'X_val_{exp_name}.npy'),
+            os.path.join(save_dir, f'X_test_{exp_name}.npy'),
+            os.path.join(save_dir, f'y_train_{exp_name}.npy'),
+            os.path.join(save_dir, f'y_val_{exp_name}.npy'),
+            os.path.join(save_dir, f'y_test_{exp_name}.npy'),
         ]
         return all(os.path.exists(f) for f in archivos)
 
     def cargar_experimento(exp_name):
-        """Carga los 6 archivos de un experimento desde disco."""
+        """Carga los 6 archivos de un experimento desde disco.
+
+        exp_name ya incluye el sufijo _combat si aplica.
+        """
         return {
-            'X_train': np.load(os.path.join(save_dir, f'X_train_{exp_name}{sufijo}.npy')),
-            'X_val':   np.load(os.path.join(save_dir, f'X_val_{exp_name}{sufijo}.npy')),
-            'X_test':  np.load(os.path.join(save_dir, f'X_test_{exp_name}{sufijo}.npy')),
-            'y_train': np.load(os.path.join(save_dir, f'y_train_{exp_name}{sufijo}.npy')),
-            'y_val':   np.load(os.path.join(save_dir, f'y_val_{exp_name}{sufijo}.npy')),
-            'y_test':  np.load(os.path.join(save_dir, f'y_test_{exp_name}{sufijo}.npy')),
+            'X_train': np.load(os.path.join(save_dir, f'X_train_{exp_name}.npy')),
+            'X_val':   np.load(os.path.join(save_dir, f'X_val_{exp_name}.npy')),
+            'X_test':  np.load(os.path.join(save_dir, f'X_test_{exp_name}.npy')),
+            'y_train': np.load(os.path.join(save_dir, f'y_train_{exp_name}.npy')),
+            'y_val':   np.load(os.path.join(save_dir, f'y_val_{exp_name}.npy')),
+            'y_test':  np.load(os.path.join(save_dir, f'y_test_{exp_name}.npy')),
         }
 
     def guardar_experimento(exp_name, exp_data):
-        """Guarda los 6 archivos de un experimento en disco."""
-        np.save(os.path.join(save_dir, f'X_train_{exp_name}{sufijo}.npy'), exp_data['X_train'])
-        np.save(os.path.join(save_dir, f'X_val_{exp_name}{sufijo}.npy'),   exp_data['X_val'])
-        np.save(os.path.join(save_dir, f'X_test_{exp_name}{sufijo}.npy'),  exp_data['X_test'])
-        np.save(os.path.join(save_dir, f'y_train_{exp_name}{sufijo}.npy'), exp_data['y_train'])
-        np.save(os.path.join(save_dir, f'y_val_{exp_name}{sufijo}.npy'),   exp_data['y_val'])
-        np.save(os.path.join(save_dir, f'y_test_{exp_name}{sufijo}.npy'),  exp_data['y_test'])
+        """Guarda los 6 archivos de un experimento en disco.
+
+        exp_name ya incluye el sufijo _combat si aplica — no se agrega de nuevo.
+        """
+        np.save(os.path.join(save_dir, f'X_train_{exp_name}.npy'), exp_data['X_train'])
+        np.save(os.path.join(save_dir, f'X_val_{exp_name}.npy'),   exp_data['X_val'])
+        np.save(os.path.join(save_dir, f'X_test_{exp_name}.npy'),  exp_data['X_test'])
+        np.save(os.path.join(save_dir, f'y_train_{exp_name}.npy'), exp_data['y_train'])
+        np.save(os.path.join(save_dir, f'y_val_{exp_name}.npy'),   exp_data['y_val'])
+        np.save(os.path.join(save_dir, f'y_test_{exp_name}.npy'),  exp_data['y_test'])
 
     try:
         # Cargar o generar splits

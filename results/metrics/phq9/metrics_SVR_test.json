@@ -1,0 +1,8 @@
+{
+  "model": "SVR",
+  "split": "test",
+  "rmse": 6.3055,
+  "mae": 5.2277,
+  "r2": 0.0965,
+  "pearson_r": 0.3318
+}

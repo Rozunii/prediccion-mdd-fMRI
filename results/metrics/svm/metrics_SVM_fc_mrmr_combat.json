@@ -1,0 +1,16 @@
+{
+    "model": "SVM",
+    "experiment": "fc_mrmr_combat",
+    "accuracy": 0.5406976744186046,
+    "sensitivity": 0.6032608695652174,
+    "specificity": 0.46875,
+    "precision": 0.5663265306122449,
+    "f1_score": 0.5842105263157895,
+    "auc_roc": 0.580961277173913,
+    "confusion_matrix": {
+        "TP": 111,
+        "FP": 85,
+        "TN": 75,
+        "FN": 73
+    }
+}

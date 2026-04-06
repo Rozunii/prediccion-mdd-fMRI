@@ -1,0 +1,12 @@
+{
+  "model": "MLP",
+  "experiment": "combined_mrmr_combat",
+  "split": "test",
+  "auc_roc": 0.6014,
+  "accuracy": 0.5872,
+  "sensitivity": 0.6413,
+  "specificity": 0.525,
+  "f1_score": 0.6243,
+  "cv_auc_mean": 0.7211,
+  "cv_auc_std": 0.031
+}

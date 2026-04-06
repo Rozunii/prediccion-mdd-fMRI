@@ -1,0 +1,16 @@
+{
+    "model": "XGB",
+    "experiment": "alff_combat_val",
+    "accuracy": 0.5988372093023255,
+    "sensitivity": 0.6521739130434783,
+    "specificity": 0.5375,
+    "precision": 0.6185567010309279,
+    "f1_score": 0.6349206349206349,
+    "auc_roc": 0.6441236413043478,
+    "confusion_matrix": {
+        "TP": 120,
+        "FP": 74,
+        "TN": 86,
+        "FN": 64
+    }
+}

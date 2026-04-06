@@ -16,6 +16,7 @@ except ImportError:
 
 FIGURES_DIR = os.path.join(config.FIGURES_DIR, 'svm')
 METRICS_DIR = os.path.join(config.METRICS_DIR, 'svm')
+MODELS_DIR  = os.path.join(config.MODELS_DIR, 'svm')
 
 def entrenar_evaluar_svm(feature):
     print(f'Entrenando: {feature}')
@@ -42,7 +43,7 @@ def entrenar_evaluar_svm(feature):
             'gamma': ['scale', 'auto']
         }
     # Hacer Grid
-    grid_search = GridSearchCV(svm, param_grid, cv=5, scoring='accuracy', n_jobs=-1, verbose=1)
+    grid_search = GridSearchCV(svm, param_grid, cv=5, scoring='roc_auc', n_jobs=-1, verbose=1)
  
     # Entrenamiento
     print('Buscando hiperparametros')
@@ -70,7 +71,7 @@ def entrenar_evaluar_svm(feature):
     utils.plot_roc_curve(y_test, y_prob, model_name="SVM", experiment_name=feature, save_dir=FIGURES_DIR)
  
     # Guardar modelo
-    model_path = os.path.join(config.MODELS_DIR, f'svm_{feature}.pkl')
+    model_path = os.path.join(MODELS_DIR, f'svm_{feature}.pkl')
     joblib.dump(mejor_modelo, model_path)
     print(f'Modelo guardado: {model_path}')
  

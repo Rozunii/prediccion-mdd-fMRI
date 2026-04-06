@@ -1,0 +1,8 @@
+{
+  "model": "Ridge",
+  "split": "test",
+  "rmse": 5.8165,
+  "mae": 4.3688,
+  "r2": 0.2312,
+  "pearson_r": 0.4995
+}
